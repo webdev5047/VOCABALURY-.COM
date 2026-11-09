@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Deep Space 3D Lexicon Universe</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    body {
+      background: radial-gradient(circle at center, #200036 0%, #0d001a 50%, #010005 100%);
+      overflow: hidden;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #fff;
+      width: 100vw;
+      height: 100vh;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    .hud-header {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud-stats {
+      pointer-events: auto;
+      background: rgba(30, 0, 55, 0.75);
+      border: 1px solid rgba(255, 0, 128, 0.4);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 8px 18px;
+      border-radius: 4px;
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      color: #00f2fe;
+      text-transform: uppercase;
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+      box-shadow: 0 0 20px rgba(255, 0, 128, 0.25);
+    }
+    .hud-controls {
+      display: flex;
+      gap: 10px;
+      pointer-events: auto;
+    }
+    .btn-cyber {
+      background: rgba(50, 0, 85, 0.85);
+      border: 1.5px solid #ff007f;
+      color: #ff77e9;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      text-transform: uppercase;
+      clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+      box-shadow: 0 0 20px rgba(255, 0, 128, 0.35);
+      transition: all 0.25s ease;
+    }
+    .btn-cyber:hover, .btn-cyber:active {
+      background: #ff007f;
+      color: #fff;
+      box-shadow: 0 0 30px #ff007f, 0 0 15px #00f2fe;
+      transform: scale(1.05);
+    }
+    .search-cyber {
+      background: rgba(20, 0, 36, 0.85);
+      border: 1.5px solid #00f2fe;
+      padding: 10px 20px;
+      color: #fff;
+      font-size: 14px;
+      width: 260px;
+      outline: none;
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+      box-shadow: 0 0 25px rgba(0, 242, 254, 0.3);
+      transition: all 0.3s ease;
+    }
+    .search-cyber:focus {
+      width: 320px;
+      border-color: #ff007f;
+      box-shadow: 0 0 35px rgba(255, 0, 128, 0.6);
+    }
+    .holo-modal {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%) translateY(170%);
+      background: rgba(16, 2, 32, 0.95);
+      border: 1.5px solid #00f2fe;
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      padding: 26px 30px;
+      width: calc(100% - 40px);
+      max-width: 580px;
+      z-index: 20;
+      clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+      transition: transform 0.45s cubic-bezier(0.19, 1, 0.22, 1);
+      box-shadow: 0 0 60px rgba(255, 0, 128, 0.5), inset 0 0 30px rgba(0, 242, 254, 0.15);
+      pointer-events: auto;
+    }
+    .holo-modal.active {
+      transform: translateX(-50%) translateY(0);
+    }
+    .holo-corner-tag {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #ff007f;
+      text-transform: uppercase;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .holo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .holo-title-group {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .holo-title {
+      font-size: 28px;
+      font-weight: 900;
+      background: linear-gradient(90deg, #00f2fe, #ff77e9, #ff007f);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .holo-pronounce {
+      font-size: 16px;
+      color: #00f2fe;
+      font-weight: 700;
+    }
+    .btn-audio {
+      background: rgba(0, 242, 254, 0.15);
+      border: 1px solid #00f2fe;
+      color: #00f2fe;
+      padding: 6px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+    .btn-audio:hover {
+      background: #00f2fe;
+      color: #000;
+      box-shadow: 0 0 20px #00f2fe;
+    }
+    .holo-bangla {
+      font-size: 20px;
+      font-weight: 800;
+      color: #ffe600;
+      margin-bottom: 12px;
+      text-shadow: 0 0 12px rgba(255, 230, 0, 0.5);
+    }
+    .holo-field {
+      margin-bottom: 8px;
+      border-left: 2px solid #ff007f;
+      padding-left: 10px;
+    }
+    .field-lbl {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 1px;
+    }
+    .field-val {
+      font-size: 13.5px;
+      line-height: 1.4;
+      color: rgba(255, 240, 255, 0.95);
+    }
+    .btn-holo-close {
+      background: linear-gradient(90deg, #ff007f, #9b51e0);
+      border: none;
+      color: #fff;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 9px 24px;
+      cursor: pointer;
+      float: right;
+      margin-top: 6px;
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+      box-shadow: 0 0 20px rgba(255, 0, 128, 0.6);
+      transition: 0.2s;
+    }
+    .btn-holo-close:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px #ff007f;
+    }
+    @media (max-width: 768px) {
+      .hud-header { flex-direction: column; align-items: flex-end; gap: 8px; }
+      .search-cyber { width: 100%; max-width: 220px; }
+      .holo-title { font-size: 22px; }
+      .holo-modal { padding: 18px; bottom: 15px; }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+</head>
+<body>
+
+  <div class="hud-header">
+    <div id="stats-badge" class="hud-stats">Connecting to Google Sheet...</div>
+    <div class="hud-controls">
+      <button id="btn-warp" class="btn-cyber">⚡ Warp Jump</button>
+      <input type="text" id="search" class="search-cyber" placeholder="Search Sheet Data...">
+    </div>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <div id="modal" class="holo-modal">
+    <div id="modal-tag" class="holo-corner-tag">NODE // 0001</div>
+    <div class="holo-header">
+      <div class="holo-title-group">
+        <div id="modal-title" class="holo-title">Vocabulary</div>
+        <div id="modal-pronounce" class="holo-pronounce">/Pronunciation/</div>
+      </div>
+      <button id="btn-speak" class="btn-audio">🔊 Voice</button>
+    </div>
+    <div id="modal-bangla" class="holo-bangla">বাংলা অর্থ</div>
+    
+    <div class="holo-field">
+      <div class="field-lbl">English Meaning:</div>
+      <div id="modal-desc" class="field-val">-</div>
+    </div>
+    <div class="holo-field">
+      <div class="field-lbl">English Meaning Pronunciation (Bangla):</div>
+      <div id="modal-desc-bn-pron" class="field-val" style="color: #ff9cf5;">-</div>
+    </div>
+    <div class="holo-field">
+      <div class="field-lbl">Bangla Translation of Meaning:</div>
+      <div id="modal-desc-bn-trans" class="field-val" style="color: #00f2fe;">-</div>
+    </div>
+
+    <button id="btn-close" class="btn-holo-close">Return to Orbit</button>
+  </div>
+
+  <script>
+    const GOOGLE_APPS_SCRIPT_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnSgIM_I6UKd68USarlLXoW-jMPIIEguwif93WXGyuv7tazaJaMTx8RyZ_6XxV8BQlhqpvi17-tG5HOOGUHfFkUQRKPZVyVGsR8SEPsNxK7gMSaWfK_7-5Z1ktNqKdYggPVMQAkIsUPOyJG6Z-xFN188TUYB5rV58ZYyXEi8_fcQw4cOzMpxJySyl_3SfmQR-tBprSmjCDW8HenfZWlHt8Dx03HUb6WzpqWqcClrNdaePSVoM01XagnxxMYz_SH91r5qBxZFbqLIBPTbEgnVyMV7tGPqRQ&lib=MvIveX7IfR1LRLvcx8pdRYaKUO1juqm10";
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x050010, 0.00028);
+
+    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 20000);
+    camera.position.set(0, 0, 400);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+    const starColors = [0xff007f, 0x00f2fe, 0x9b51e0, 0xff77e9, 0xffe600, 0x00ff88];
+    const starGeo = new THREE.BufferGeometry();
+    const starCoords = [], starColorBuffer = [];
+
+    for (let i = 0; i < 12000; i++) {
+      starCoords.push(
+        (Math.random() - 0.5) * 7000,
+        (Math.random() - 0.5) * 7000,
+        (Math.random() - 0.5) * 22000
+      );
+      const c = new THREE.Color(starColors[Math.floor(Math.random() * starColors.length)]);
+      starColorBuffer.push(c.r, c.g, c.b);
+    }
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starCoords, 3));
+    starGeo.setAttribute('color', new THREE.Float32BufferAttribute(starColorBuffer, 3));
+    const galaxyStars = new THREE.Points(starGeo, new THREE.PointsMaterial({ size: 4.5, vertexColors: true, transparent: true, opacity: 0.9 }));
+    scene.add(galaxyStars);
+
+    function generateCardTexture(data) {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 360;
+      const ctx = c.getContext('2d');
+      const styleId = data.id % 30;
+
+      const grad = ctx.createLinearGradient(0, 0, 512, 360);
+      const hue = (data.id * 23) % 60 + 280;
+      grad.addColorStop(0, `hsla(${hue}, 95%, 26%, 0.94)`);
+      grad.addColorStop(0.5, `hsla(${(hue + 40) % 360}, 90%, 14%, 0.96)`);
+      grad.addColorStop(1, `hsla(260, 100%, 6%, 0.98)`);
+      ctx.fillStyle = grad;
+
+      ctx.beginPath();
+      if (styleId === 0) ctx.roundRect(14, 14, 484, 332, 28);
+      else if (styleId === 1) { ctx.moveTo(60, 14); ctx.lineTo(498, 14); ctx.lineTo(452, 346); ctx.lineTo(14, 346); ctx.closePath(); }
+      else if (styleId === 2) { ctx.moveTo(14, 14); ctx.lineTo(452, 14); ctx.lineTo(498, 346); ctx.lineTo(60, 346); ctx.closePath(); }
+      else if (styleId === 3) { ctx.moveTo(14, 60); ctx.lineTo(60, 14); ctx.lineTo(452, 14); ctx.lineTo(498, 60); ctx.lineTo(498, 300); ctx.lineTo(452, 346); ctx.lineTo(60, 346); ctx.lineTo(14, 300); ctx.closePath(); }
+      else if (styleId === 4) ctx.roundRect(14, 14, 484, 332, [50, 0, 50, 0]);
+      else if (styleId === 5) ctx.roundRect(14, 14, 484, 332, [0, 50, 0, 50]);
+      else if (styleId === 6) ctx.roundRect(14, 14, 484, 332, [40, 40, 0, 0]);
+      else if (styleId === 7) ctx.roundRect(14, 14, 484, 332, [0, 0, 40, 40]);
+      else if (styleId === 8) { ctx.moveTo(14, 14); ctx.lineTo(498, 14); ctx.lineTo(498, 280); ctx.lineTo(432, 346); ctx.lineTo(14, 346); ctx.closePath(); }
+      else ctx.roundRect(14, 14, 484, 332, 18);
+      ctx.fill();
+
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = (data.id % 2 === 0) ? '#ff007f' : '#00f2fe';
+      ctx.stroke();
+
+      ctx.fillStyle = '#ff77e9';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(`NODE // #${data.id.toString().padStart(4, '0')}`, 35, 48);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 30px sans-serif';
+      ctx.fillText(data.title || "", 35, 95);
+
+      ctx.fillStyle = '#00f2fe';
+      ctx.font = 'bold 20px "Segoe UI", sans-serif';
+      ctx.fillText(`উচ্চারণ: ${data.pronEngBn || ""}`, 35, 135);
+
+      ctx.fillStyle = '#ffe600';
+      ctx.font = 'bold 22px "Segoe UI", sans-serif';
+      ctx.fillText(`অর্থ: ${data.bangla || ""}`, 35, 175);
+
+      ctx.fillStyle = '#f0d9ff';
+      ctx.font = '16px sans-serif';
+      ctx.fillText(`Def: ${(data.descEng || "").slice(0, 38)}...`, 35, 220);
+
+      ctx.fillStyle = '#00f2fe';
+      ctx.font = '15px "Segoe UI", sans-serif';
+      ctx.fillText(`অনুবাদ: ${(data.descBnTranslate || "").slice(0, 32)}...`, 35, 260);
+
+      return new THREE.CanvasTexture(c);
+    }
+
+    const cardGroup = new THREE.Group();
+    scene.add(cardGroup);
+    let cardMeshes = [];
+    let TOTAL_Z_DEPTH = 18000;
+
+    function build3DGalaxy(items) {
+      while (cardGroup.children.length > 0) {
+        cardGroup.remove(cardGroup.children[0]);
+      }
+      cardMeshes = [];
+      TOTAL_Z_DEPTH = Math.max(12000, items.length * 18);
+
+      items.forEach((data, i) => {
+        const texture = generateCardTexture(data);
+        const mat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide, transparent: true, opacity: 0.95 });
+        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(42, 30), mat);
+
+        const angle = (i / items.length) * Math.PI * 2 * Math.max(8, items.length / 45);
+        const radius = 140 + Math.random() * 420;
+        mesh.position.x = Math.cos(angle) * radius + (Math.random() - 0.5) * 120;
+        mesh.position.y = Math.sin(angle) * radius + (Math.random() - 0.5) * 120;
+        mesh.position.z = - (i * (TOTAL_Z_DEPTH / items.length));
+        mesh.rotation.z = (Math.random() - 0.5) * 0.2;
+        mesh.userData = { ...data, dynamicScale: 1.0 };
+
+        cardGroup.add(mesh);
+        cardMeshes.push(mesh);
+      });
+
+      document.getElementById('stats-badge').innerText = `Galaxy Matrix // ${items.length} Live Items`;
+    }
+
+    async function fetchSheetData() {
+      try {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+        const res = await response.json();
+        
+        let records = [];
+        if (Array.isArray(res)) {
+          records = res.map((r, i) => ({
+            id: i + 1,
+            title: r[0] || r.title || r.Vocabulary || "",
+            pronEngBn: r[1] || r.pronEngBn || r.Eng_Pron_Bn || "",
+            bangla: r[2] || r.bangla || r.Bangla_Meaning || "",
+            descEng: r[3] || r.descEng || r.Eng_Meaning || "",
+            descEngPronBn: r[4] || r.descEngPronBn || r.Eng_Meaning_Bn_Pron || "",
+            descBnTranslate: r[5] || r.descBnTranslate || r.Bangla_Translate_Meaning || ""
+          }));
+        } else if (res.data && Array.isArray(res.data)) {
+          records = res.data;
+        }
+
+        if (records.length > 0) {
+          build3DGalaxy(records);
+        } else {
+          fallbackLocalData();
+        }
+      } catch (err) {
+        console.warn("Using fallback local data:", err);
+        fallbackLocalData();
+      }
+    }
+
+    function fallbackLocalData() {
+      const fallback = Array.from({ length: 40 }, (_, i) => ({
+        id: i + 1,
+        title: "Luminescent",
+        pronEngBn: "লুমিনেসেন্ট",
+        bangla: "উজ্জ্বল / আলোকময়",
+        descEng: "Emitting light not caused by heat.",
+        descEngPronBn: "ইমিটিং লাইট নট কজড বাই হিট।",
+        descBnTranslate: "তাপ ব্যতীত আলো বিকিরণকারী বস্তু।"
+      }));
+      build3DGalaxy(fallback);
+      document.getElementById('stats-badge').innerText = `Live Connected // Fallback Mode`;
+    }
+
+    fetchSheetData();
+
+    let isDragging = false, prevPointer = { x: 0, y: 0 }, targetRot = { x: 0, y: 0 }, targetCamZ = camera.position.z;
+    let isInspecting = false, hoveredMesh = null, initialPinchDist = null, currentActiveWord = "";
+
+    function onPointerDown(x, y) { isDragging = true; prevPointer = { x, y }; }
+    function onPointerMove(x, y) {
+      if (isDragging && !isInspecting) {
+        targetRot.y += (x - prevPointer.x) * 0.0025;
+        targetRot.x += (y - prevPointer.y) * 0.0025;
+        prevPointer = { x, y };
+      }
+    }
+    function onPointerUp() { isDragging = false; initialPinchDist = null; }
+
+    window.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.hud-header') || e.target.closest('.holo-modal')) return;
+      onPointerDown(e.clientX, e.clientY);
+    });
+    window.addEventListener('mousemove', (e) => {
+      onPointerMove(e.clientX, e.clientY);
+      if (!isInspecting && window.innerWidth > 768 && cardMeshes.length > 0) {
+        const m = new THREE.Vector2((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+        raycaster.setFromCamera(m, camera);
+        const hits = raycaster.intersectObjects(cardMeshes);
+        if (hits.length > 0) {
+          const target = hits[0].object;
+          if (hoveredMesh !== target) {
+            if (hoveredMesh) hoveredMesh.scale.setScalar(hoveredMesh.userData.dynamicScale);
+            hoveredMesh = target;
+            hoveredMesh.scale.setScalar(hoveredMesh.userData.dynamicScale * 1.3);
+            document.body.style.cursor = 'pointer';
+          }
+        } else if (hoveredMesh) {
+          hoveredMesh.scale.setScalar(hoveredMesh.userData.dynamicScale);
+          hoveredMesh = null;
+          document.body.style.cursor = 'default';
+        }
+      }
+    });
+    window.addEventListener('mouseup', onPointerUp);
+
+    window.addEventListener('touchstart', (e) => {
+      if (e.target.closest('.hud-header') || e.target.closest('.holo-modal')) return;
+      if (e.touches.length === 1) onPointerDown(e.touches[0].clientX, e.touches[0].clientY);
+      else if (e.touches.length === 2) initialPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1) onPointerMove(e.touches[0].clientX, e.touches[0].clientY);
+      else if (e.touches.length === 2 && initialPinchDist && !isInspecting) {
+        const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        targetCamZ += (initialPinchDist - d) * 3.5;
+        initialPinchDist = d;
+      }
+    }, { passive: true });
+    window.addEventListener('touchend', onPointerUp);
+
+    window.addEventListener('wheel', (e) => {
+      if (isInspecting) return;
+      targetCamZ += e.deltaY * 2.2;
+    });
+
+    const raycaster = new THREE.Raycaster();
+    const modal = document.getElementById('modal');
+
+    window.addEventListener('click', (e) => {
+      if (e.target.closest('.hud-header') || e.target.closest('.holo-modal') || cardMeshes.length === 0) return;
+      const m = new THREE.Vector2((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+      raycaster.setFromCamera(m, camera);
+      const hits = raycaster.intersectObjects(cardMeshes);
+      if (hits.length > 0) openCard(hits[0].object);
+    });
+
+    function openCard(mesh) {
+      isInspecting = true;
+      currentActiveWord = mesh.userData.title;
+      document.getElementById('modal-tag').innerText = `NODE // #${mesh.userData.id.toString().padStart(4, '0')}`;
+      document.getElementById('modal-title').innerText = mesh.userData.title;
+      document.getElementById('modal-pronounce').innerText = `/${mesh.userData.pronEngBn}/`;
+      document.getElementById('modal-bangla').innerText = `অর্থ: ${mesh.userData.bangla}`;
+      document.getElementById('modal-desc').innerText = mesh.userData.descEng;
+      document.getElementById('modal-desc-bn-pron').innerText = mesh.userData.descEngPronBn;
+      document.getElementById('modal-desc-bn-trans').innerText = mesh.userData.descBnTranslate;
+      modal.classList.add('active');
+
+      const targetPos = new THREE.Vector3();
+      mesh.getWorldPosition(targetPos);
+      new TWEEN.Tween(camera.position).to({ x: targetPos.x, y: targetPos.y, z: targetPos.z + 65 }, 800).easing(TWEEN.Easing.Cubic.Out).start();
+      new TWEEN.Tween(mesh.scale).to({ x: mesh.userData.dynamicScale * 1.35, y: mesh.userData.dynamicScale * 1.35, z: mesh.userData.dynamicScale * 1.35 }, 300).start();
+    }
+
+    document.getElementById('btn-speak').addEventListener('click', () => {
+      if ('speechSynthesis' in window && currentActiveWord) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(currentActiveWord);
+        utter.lang = 'en-US';
+        utter.rate = 0.9;
+        window.speechSynthesis.speak(utter);
+      }
+    });
+
+    document.getElementById('btn-warp').addEventListener('click', () => {
+      if (cardMeshes.length === 0) return;
+      const randMesh = cardMeshes[Math.floor(Math.random() * cardMeshes.length)];
+      targetCamZ = randMesh.position.z + 300;
+      openCard(randMesh);
+    });
+
+    document.getElementById('btn-close').addEventListener('click', () => {
+      modal.classList.remove('active');
+      new TWEEN.Tween(camera.position).to({ x: 0, y: 0, z: targetCamZ }, 800).easing(TWEEN.Easing.Cubic.Out).onComplete(() => { isInspecting = false; }).start();
+    });
+
+    document.getElementById('search').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      cardMeshes.forEach(mesh => {
+        const hit = (mesh.userData.title || "").toLowerCase().includes(q) ||
+                    (mesh.userData.bangla || "").includes(q) ||
+                    (mesh.userData.pronEngBn || "").includes(q);
+        mesh.material.opacity = hit || !q ? 0.95 : 0.05;
+      });
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function animate(time) {
+      requestAnimationFrame(animate);
+      TWEEN.update(time);
+
+      if (!isInspecting && cardMeshes.length > 0) {
+        camera.position.z += (targetCamZ - camera.position.z) * 0.08;
+
+        cardMeshes.forEach(mesh => {
+          const relZ = mesh.position.z - camera.position.z;
+          if (relZ > 250) mesh.position.z -= TOTAL_Z_DEPTH;
+          else if (relZ < -TOTAL_Z_DEPTH + 250) mesh.position.z += TOTAL_Z_DEPTH;
+
+          const dist = Math.abs(mesh.position.z - camera.position.z);
+          const normalizedDist = Math.min(Math.max(dist / 4200, 0), 1);
+          const currentScale = (1.85 * (1 - normalizedDist)) + (0.35 * normalizedDist);
+          mesh.userData.dynamicScale = currentScale;
+
+          if (hoveredMesh !== mesh) mesh.scale.set(currentScale, currentScale, currentScale);
+        });
+
+        cardGroup.rotation.y += (targetRot.y - cardGroup.rotation.y) * 0.08;
+        cardGroup.rotation.x += (targetRot.x - cardGroup.rotation.x) * 0.08;
+        cardGroup.rotation.z += 0.0004;
+      }
+
+      galaxyStars.rotation.z += 0.0004;
+      galaxyStars.rotation.y += 0.0002;
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
